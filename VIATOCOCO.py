@@ -29,10 +29,13 @@ def convert_VIA_to_coco(ann_file, out_file, image_prefix):
         labels = []
         masks = []
 
-#多个类别标注，循环获取每一个一个类别
+#多个类别标注，循环获取每一个类别
         for n in range(len(v['regions'])):
-            obj = v['regions'][n]
-            obj = obj['shape_attributes']
+            all_obj = v['regions'][n]
+            obj = all_obj['shape_attributes']
+            type_obj = all_obj['region_attributes']
+            type_n = type_obj['type']
+
             px = obj['all_points_x']
             py = obj['all_points_y']
             poly = [(x + 0.5, y + 0.5) for x, y in zip(px, py)]
@@ -44,19 +47,19 @@ def convert_VIA_to_coco(ann_file, out_file, image_prefix):
             data_anno = dict(
                 image_id=idx,
                 id=obj_count,
-                category_id=n,
+                category_id=int(type_n)-1,
                 bbox=[x_min, y_min, x_max - x_min, y_max - y_min],
                 area=(x_max - x_min) * (y_max - y_min),
                 segmentation=[poly],
                 iscrowd=0)
-        annotations.append(data_anno)
-        obj_count += 1
+            annotations.append(data_anno)
+            obj_count += 1
 
 
     coco_format_json = dict(
         images=images,
         annotations=annotations,
-        categories=[{'id': 0, 'name': 'fish'} , {'id': 1, 'name': 'face'}])#添加自己训练数据的类别
+        categories=[{'id': 0, 'name': 'cap'} , {'id': 1, 'name': 'tissue'}, {'id': 2, 'name': 'peanuts'}, {'id': 3, 'name': 'battery'}])#添加自己训练数据的类别
     mmcv.dump(coco_format_json, out_file)
 
-convert_VIA_to_coco("train/2fishandface.json", "train/annotation_coco.json", "train/")
+convert_VIA_to_coco("train/via_export_json.json", "train/annotation_coco.json", "train/")
